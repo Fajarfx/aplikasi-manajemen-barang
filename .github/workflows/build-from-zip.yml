@@ -1,0 +1,36 @@
+name: Build APK from ZIP
+
+on:
+  workflow_dispatch:  # bisa dijalankan manual lewat tombol "Run workflow"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Unzip Android project
+        run: |
+          unzip -q StockSyncApp_v3.zip -d project
+          cd project/StockSyncApp_v3
+          echo "✅ Project extracted"
+
+      - name: Build debug APK
+        working-directory: project/StockSyncApp_v3
+        run: |
+          chmod +x ./gradlew || true
+          ./gradlew assembleDebug
+
+      - name: Upload built APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: project/StockSyncApp_v3/app/build/outputs/apk/debug/*.apk
