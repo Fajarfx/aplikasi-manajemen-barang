@@ -1,7 +1,7 @@
-name: Build APK from ZIP
+name: Build APK from ZIP (auto-fix)
 
 on:
-  workflow_dispatch:  # bisa dijalankan manual lewat tombol "Run workflow"
+  workflow_dispatch:
 
 jobs:
   build:
@@ -18,14 +18,18 @@ jobs:
           java-version: '17'
 
       - name: Unzip Android project
+        id: unzip
         run: |
           unzip -q StockSyncApp_v3.zip -d project
-          cd project/StockSyncApp_v3
-          echo "✅ Project extracted"
+          echo "📂 Folder hasil ekstrak:"
+          ls project
+          found=$(find project -name "gradlew" | head -n 1)
+          echo "gradle_path=$found" >> $GITHUB_ENV
+          echo "Found gradlew at: $found"
 
       - name: Build debug APK
-        working-directory: project/StockSyncApp_v3
         run: |
+          cd $(dirname $gradle_path)
           chmod +x ./gradlew || true
           ./gradlew assembleDebug
 
@@ -33,4 +37,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
-          path: project/StockSyncApp_v3/app/build/outputs/apk/debug/*.apk
+          path: project/**/app/build/outputs/apk/debug/*.apk
